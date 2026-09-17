@@ -1,0 +1,41 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <omp.h>
+
+using namespace std;
+
+using ll = long long;
+
+void ioss() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+}
+
+int main() {
+    //ioss();
+
+    omp_set_num_threads(8);
+
+#pragma omp parallel
+    {
+        int threadId = omp_get_thread_num();
+        int threadsCount = omp_get_num_threads();
+
+#pragma omp critical // в этот кусок кода одновременно может зайти только один поток
+        cout << "Thread ID: " << threadId
+             << ", Threads count: " << threadsCount
+             << ", Hello World" << "\n";
+    }
+
+    return 0;
+
+}
+
+/*
+Все восемь потоков выполняют параллельную область одновременно.
+ Порядок их выполнения заранее не определён.
+ Кроме того, потоки одновременно обращаются к общему потоку вывода cout,
+ поэтому отдельные части строк могут перемешиваться.
+ Для синхронизации вывода можно использовать критическую секцию #pragma omp critical.
+ */
