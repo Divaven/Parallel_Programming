@@ -1,0 +1,74 @@
+void third () {
+    int a = 10;
+    int b = 20;
+
+    cout << "Before first region: a = " << a << ", b = " << b << endl;
+
+#pragma omp parallel num_threads(2) private(a) firstprivate(b)
+    {
+        int id = omp_get_thread_num();
+
+       // a = 0;          // private-переменная не обязана иметь исходное значение
+        a += id;
+        b += id;
+
+#pragma omp critical
+        {
+            cout << "First Thread " << id << ": a = " << a << ", b = " << b << endl;
+        }
+    }
+
+    cout << "After first: a = " << a << ", b = " << b << endl;
+
+    cout << endl;
+
+    cout << "Before second: a = " << a << ", b = " << b << endl;
+
+#pragma omp parallel num_threads(4) shared(a) private(b)
+    {
+        int id = omp_get_thread_num();
+
+        b = 0;
+
+        a -= id;
+        b -= id;
+
+#pragma omp critical
+        {
+            cout << "Second. Thread " << id << ": a = " << a << ", b = " << b << endl;
+        }
+    }
+
+    cout << "After second: a = " << a << ", b = " << b << endl;
+/*
+ private означает, что каждый поток получает свою отдельную копию переменной,
+ но начальное значение из внешней переменной не копируется. Поэтому такую переменную внутри
+ параллельной области нужно сначала инициализировать.
+
+ firstprivate тоже создаёт отдельную копию для каждого потока, но при этом копирует начальное значение
+ внешней переменной. Изменения такой копии не влияют на исходную переменную после выхода из параллельной области.
+
+ shared означает, что все потоки работают с одной общей переменной.
+ Поэтому изменения, сделанные одним потоком, видят остальные потоки, и здесь уже может возникнуть гонка данных,
+ если несколько потоков одновременно меняют значение без синхронизации.
+ В первой параллельной области a объявлена как private, а b как firstprivate,
+ поэтому у каждого потока свои копии. Во второй области a общая для всех потоков, а b приватная.
+
+Before first region: a = 10, b = 20
+
+First region. Thread 0: a = 0, b = 20
+First region. Thread 1: a = 1, b = 21
+
+After first region: a = 10, b = 20
+
+Before second region: a = 10, b = 20
+
+Second region. Thread 0: a = 10, b = 0
+Second region. Thread 1: a = 9, b = -1
+Second region. Thread 2: a = 7, b = -2
+Second region. Thread 3: a = 4, b = -3
+
+After second region: a = 4, b = 20
+
+ */
+}
