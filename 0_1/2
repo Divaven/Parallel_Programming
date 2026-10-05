@@ -1,0 +1,47 @@
+void second () {
+    int threadsCount;
+
+    // Первая область
+    threadsCount = 3;
+    omp_set_num_threads(threadsCount);
+
+    cout << "First parallel:" << endl;
+
+#pragma omp parallel if(threadsCount > 1)
+    {
+        int threadId = omp_get_thread_num();
+        int totalThreads = omp_get_num_threads();
+
+#pragma omp critical
+        {
+            cout << "Thread ID: " << threadId
+                 << ", Threads count: " << totalThreads << endl;
+        }
+    }
+
+    cout << endl;
+
+    // Вторая область
+    threadsCount = 1;
+    omp_set_num_threads(threadsCount);
+
+    cout << "Second parallel:" << endl;
+
+#pragma omp parallel if(threadsCount > 1)
+    {
+        int threadId = omp_get_thread_num();
+        int totalThreads = omp_get_num_threads();
+
+#pragma omp critical
+        {
+            cout << "Thread ID: " << threadId << ", Threads count: " << totalThreads << endl;
+        }
+    }
+
+    /*
+     В первой параллельной области значение количества потоков равно 3, поэтому условие
+     threadsCount > 1 истинно и область выполняется тремя потоками.
+     Во второй области количество потоков равно 1, условие ложно,
+     поэтому параллельная область выполняется одним потоком с номером 0.
+     */
+}
