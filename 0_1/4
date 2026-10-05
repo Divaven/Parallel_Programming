@@ -1,0 +1,46 @@
+void fourth () {
+    int a[10] = {5, 2, 8, 1, 9, 4, 7, 3, 6, 10};
+    int b[10] = {12, 25, 7, 33, 18, 41, 9, 16, 28, 5};
+
+#pragma omp parallel num_threads(2)
+    {
+        int id = omp_get_thread_num();
+
+        if (id == 0) {
+            int minValue = a[0];
+
+            for (int i = 1; i < 10; i++) {
+                if (a[i] < minValue) {
+                    minValue = a[i];
+                }
+            }
+
+#pragma omp critical
+            {
+                cout << "Thread " << id << ": min in array a = " << minValue << endl;
+            }
+        }
+
+        if (id == 1) {
+            int maxValue = b[0];
+
+            for (int i = 1; i < 10; i++) {
+                if (b[i] > maxValue) {
+                    maxValue = b[i];
+                }
+            }
+
+#pragma omp critical
+            {
+                cout << "Thread " << id << ": max in array b = " << maxValue << endl;
+            }
+        }
+    }
+
+    /*
+     В программе создаются два потока. Каждый поток получает свой идентификатор через omp_get_thread_num().
+     Поток с номером 0 выполняет поиск минимального элемента массива
+     а поток с номером 1 — максимального элемента массива b. Таким образом,
+     разные части работы выполняются одновременно разными потоками.
+     */
+}
