@@ -1,0 +1,55 @@
+void seventh () {
+    int a[12];
+    int b[12];
+    int c[12];
+
+    // Первая параллельная область
+#pragma omp parallel num_threads(3)
+    {
+#pragma omp for schedule(static, 2)
+        for (int i = 0; i < 12; i++) {
+            a[i] = i;
+            b[i] = i * 2;
+
+#pragma omp critical
+            {
+                cout << "First. Thread " << omp_get_thread_num() << " of " << omp_get_num_threads()
+                     <<  i << " " << a[i]
+                     <<  i << " " << b[i] << endl;
+            }
+        }
+    }
+
+    cout << endl;
+
+    // Вторая параллельная область
+#pragma omp parallel num_threads(4)
+    {
+#pragma omp for schedule(dynamic, 2)
+        for (int i = 0; i < 12; i++) {
+            c[i] = a[i] + b[i];
+
+#pragma omp critical
+            {
+                cout << "Second. Thread " << omp_get_thread_num() << " of " << omp_get_num_threads()
+                << i << " " << c[i] << endl;
+            }
+        }
+    }
+
+    cout << endl << "Result array c:" << endl;
+
+    for (int i = 0; i < 12; i++) {
+        cout << c[i] << " ";
+    }
+
+    cout << endl;
+
+    /*
+     В первой параллельной области используется три потока и schedule(static, 2).
+     Итерации цикла заранее распределяются между потоками порциями по две.
+     Вторая область использует четыре потока и schedule(dynamic, 2).
+     Здесь поток получает следующую порцию итераций после того, как закончит предыдущую.
+     Поэтому динамическое распределение удобно, когда время выполнения разных итераций может отличаться
+     */
+}
