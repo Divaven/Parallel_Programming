@@ -1,0 +1,68 @@
+void eigth () {
+    int N = 1000;
+
+    int matrix[N][N];
+    int vector[N];
+
+    ll resultSequential[N];
+    ll resultParallel[N];
+
+    for (int i = 0; i < N; i++) {
+        vector[i] = rand() % 10;
+
+        for (int j = 0; j < N; j++) {
+            matrix[i][j] = rand() % 10;
+        }
+    }
+
+
+    // Последовательная версия
+    double start = omp_get_wtime();
+
+    for (int i = 0; i < N; i++) {
+        resultSequential[i] = 0;
+
+        for (int j = 0; j < N; j++) {
+            resultSequential[i] += matrix[i][j] * vector[j];
+        }
+    }
+
+    double end = omp_get_wtime();
+
+    double sequentialTime = end - start;
+
+
+    // Параллельная версия
+    start = omp_get_wtime();
+
+#pragma omp parallel for
+    for (int i = 0; i < N; i++) {
+        resultParallel[i] = 0;
+
+        for (int j = 0; j < N; j++) {
+            resultParallel[i] += matrix[i][j] * vector[j];
+        }
+    }
+
+    end = omp_get_wtime();
+
+    double parallelTime = end - start;
+
+    cout << "Sequential time: "
+         << sequentialTime << " sec" << endl;
+
+    cout << "Parallel time: "
+         << parallelTime << " sec" << endl;
+
+    cout << "Acceleration: "
+         << sequentialTime / parallelTime << endl;
+
+
+    /*
+     Каждый элемент результирующего вектора вычисляется как сумма произведений элементов одной строки матрицы на
+     соответствующие элементы вектора. В параллельной версии используется parallel for, поэтому разные строки
+     матрицы обрабатываются разными потоками. Время выполнения измеряется с помощью omp_get_wtime(),
+     после чего сравнивается последовательное и параллельное время.
+     */
+}
+
