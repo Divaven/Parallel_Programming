@@ -1,0 +1,64 @@
+void ninth () {
+    int d[6][8];
+
+    // Заполняем массив случайными числами
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 8; j++) {
+            d[i][j] = rand() % 100;
+        }
+    }
+
+    // Вывод массива
+    cout << "Array:" << endl;
+
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 8; j++) {
+            cout << d[i][j] << "\t";
+        }
+        cout << endl;
+    }
+
+    int globalMin = d[0][0];
+    int globalMax = d[0][0];
+
+#pragma omp parallel num_threads(4)
+    {
+        int localMin = d[0][0];
+        int localMax = d[0][0];
+
+#pragma omp for
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (d[i][j] < localMin) {
+                    localMin = d[i][j];
+                }
+
+                if (d[i][j] > localMax) {
+                    localMax = d[i][j];
+                }
+            }
+        }
+
+#pragma omp critical
+        {
+            if (localMin < globalMin) {
+                globalMin = localMin;
+            }
+
+            if (localMax > globalMax) {
+                globalMax = localMax;
+            }
+        }
+    }
+
+    cout << endl;
+    cout << "Min = " << globalMin << endl;
+    cout << "Max = " << globalMax << endl;
+
+    /*
+     С помощью omp for строки массива распределяются между потоками. Каждый поток независимо ищет свой локальный
+     минимум и максимум. После завершения своей части поток входит в критическую секцию omp critical,
+     где сравнивает локальные значения с глобальными. critical нужен, чтобы только один поток одновременно
+     изменял общие переменные globalMin и globalMax, и не возникала гонка данных.
+     */
+}
