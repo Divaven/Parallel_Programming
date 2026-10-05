@@ -1,0 +1,134 @@
+void twelve () {
+    const int THREADS = 8;
+
+#pragma omp parallel num_threads(THREADS)
+    {
+        int id = omp_get_thread_num();
+
+        for (int i = THREADS - 1; i >= 0; i--) {
+
+#pragma omp barrier // все потоки должны дождаться друг друга в этой точке.
+            // Пока самый медленный не дошёл, остальные дальше не идут.
+
+            if (id == i) {
+                cout << "Thread ID: " << id << endl;
+            }
+        }
+    }
+
+    // ---------------------------------------
+
+    int ids[THREADS];
+
+#pragma omp parallel num_threads(THREADS)
+    {
+        int id = omp_get_thread_num();
+
+        ids[id] = id;
+
+#pragma omp barrier
+
+#pragma omp single // блок выполняет только один поток из команды, остальные его пропускают
+        {
+            for (int i = THREADS - 1; i >= 0; i--) {
+                cout << "Thread ID: " << ids[i] << endl;
+            }
+        }
+    }
+
+    // ----------------------------------------
+
+    int current = THREADS - 1;
+
+#pragma omp parallel num_threads(THREADS) shared(current)
+    {
+        int id = omp_get_thread_num();
+
+        bool printed = false;
+
+        while (!printed) {
+#pragma omp critical
+            {
+                if (id == current) {
+                    cout << "Thread ID: " << id << endl;
+                    current--;
+                    printed = true;
+                }
+            }
+        }
+    }
+
+    // -----------------------------------------
+
+#pragma omp parallel for ordered num_threads(THREADS)
+    for (int i = 0; i < THREADS; i++) {
+
+#pragma omp ordered // заставляет участок кода выполняться в порядке итераций цикла, даже если сам цикл параллельный.
+        {
+            cout << "Thread ID: "
+                 << THREADS - 1 - i
+                 << endl;
+        }
+    }
+
+    // -------------------------------------------
+
+#pragma omp parallel sections num_threads(8)
+    {
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 7" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 6" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 5" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 4" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 3" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 2" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 1" << endl;
+        }
+
+#pragma omp section
+        {
+#pragma omp critical
+            cout << "Thread 0" << endl;
+        }
+    }
+
+    /*
+     barrier + цикл
+    critical + общий счётчик
+    массив + single
+    ordered
+    task depend
+     */
+}
