@@ -1,0 +1,38 @@
+void sixth () {
+    int a[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int b[10] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+
+    int sumA = 0;
+    int sumB = 0;
+
+#pragma omp parallel for reduction(+:sumA)
+    for (int i = 0; i < 10; i++) {
+        sumA += a[i];
+    }
+
+#pragma omp parallel for reduction(+:sumB)
+    for (int i = 0; i < 10; i++) {
+        sumB += b[i];
+    }
+
+    double averageA = static_cast<double>(sumA) / 10;
+    double averageB = static_cast<double>(sumB) / 10;
+
+    cout << "Average a = " << averageA << endl;
+    cout << "Average b = " << averageB << endl;
+
+    if (averageA > averageB) {
+        cout << "Average a is greater" << endl;
+    } else if (averageA < averageB) {
+        cout << "Average b is greater" << endl;
+    } else {
+        cout << "Averages are equal" << endl;
+    }
+
+    /*
+     parallel for распределяет итерации цикла между потоками. Для суммирования используется reduction,
+     чтобы каждый поток работал со своей локальной суммой, а после завершения цикла OpenMP объединил все
+     частичные суммы в общий результат. После этого суммы делятся на количество элементов и сравниваются
+     средние значения массивов
+     */
+}
