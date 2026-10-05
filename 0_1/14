@@ -1,0 +1,17 @@
+void fourteen () {
+    const int N = 210;
+    long long result = 0;
+
+#pragma omp parallel for reduction(+:result) num_threads(4)
+    for (int i = 0; i < N; i++) {
+        result += i + i + 1;
+    }
+
+    cout << N << "^2 = " << result << endl;
+
+    /*
+     ля числа 210 нужно сложить первые 210 нечётных чисел.
+     Итерации цикла распределяются между потоками через parallel for, а для общей суммы используется reduction,
+     чтобы избежать гонки данных. В результате получается 44100.
+     */
+}
