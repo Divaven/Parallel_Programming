@@ -1,0 +1,48 @@
+void eleven () {
+    const int N = 30;
+
+    int a[N];
+
+
+    // Заполняем массив случайными числами от 0 до 99
+    for (int i = 0; i < N; i++) {
+        a[i] = rand() % 100;
+    }
+
+    cout << "Array:" << endl;
+
+    for (int i = 0; i < N; i++) {
+        cout << a[i] << " ";
+    }
+
+    cout << endl;
+
+    int globalMax = -1;
+
+#pragma omp parallel num_threads(4)
+    {
+        int localMax = -1;
+
+#pragma omp for
+        for (int i = 0; i < N; i++) {
+            if (a[i] % 7 == 0 && a[i] > localMax) {
+                localMax = a[i];
+            }
+        }
+
+#pragma omp critical
+        {
+            if (localMax > globalMax) {
+                globalMax = localMax;
+            }
+        }
+    }
+
+    cout << "Max divisible by 7 = " << globalMax << endl;
+    /*
+     С помощью omp for элементы массива распределяются между потоками. Каждый поток ищет свой локальный
+     максимальный элемент, кратный 7. После этого поток входит в критическую секцию и сравнивает локальный
+     максимум с общим globalMax. Критическая секция нужна, чтобы несколько потоков одновременно не изменяли
+     общий максимум и не возникала гонка данных.
+     */
+}
