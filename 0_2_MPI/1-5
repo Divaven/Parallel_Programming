@@ -1,0 +1,191 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cstdlib>
+#include <ctime>
+#include <mpi.h>
+
+using namespace std;
+
+using ll = long long;
+
+void ioss() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+}
+
+void first () {
+    MPI_Init(nullptr, nullptr);
+
+    cout << "Hello, World!" << endl;
+
+    MPI_Finalize();
+
+}
+
+void second() {
+    // MPI_COMM_WORLD — это стандартная группа, в которую входят все процессы, которые запускаются через mpirun
+
+    MPI_Init(nullptr, nullptr);
+
+    int rank;
+    int size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    cout << "Process: " << rank << ", total processes: " << size << endl;
+
+    MPI_Finalize();
+}
+
+void third () {
+    MPI_Init(nullptr, nullptr);
+
+    int rank;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    int a[10];
+
+    if (rank == 0) {
+
+        for (int i = 0; i < 10; i++) {
+            a[i] = rand() % 100;
+        }
+
+        MPI_Send(
+                a,               // что отправляем
+                10,              // сколько элементов
+                MPI_INT,         // тип элементов
+                1,               // кому отправляем
+                0,               // тег сообщения
+                MPI_COMM_WORLD   // коммуникатор
+        );
+    }
+
+    if (rank == 1) {
+        MPI_Recv(
+                a,                 // куда записать
+                10,                // сколько элементов ожидаем
+                MPI_INT,           // тип
+                0,                 // от какого процесса
+                0,                 // тег
+                MPI_COMM_WORLD,    // коммуникатор
+                MPI_STATUS_IGNORE  // дополнительная информация нам не нужна
+        );
+
+        cout << "Received array: ";
+
+        for (int i = 0; i < 10; i++) {
+            cout << a[i] << " ";
+        }
+
+        cout << endl;
+    }
+
+    MPI_Finalize();
+}
+
+void fourth() {
+    MPI_Init(nullptr, nullptr);
+
+    int rank;
+    int size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    if (rank == 1) {
+        int a[10] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+
+        for (int i = 0; i < size; i++) {
+            if (i != 1) {
+                MPI_Send(a, 10, MPI_INT, i, 0, MPI_COMM_WORLD);
+            }
+        }
+    } else {
+        MPI_Status status;
+
+        MPI_Probe(1, 0, MPI_COMM_WORLD, &status);
+
+        int count;
+        MPI_Get_count(&status, MPI_INT, &count);
+
+        vector<int> a(count);
+
+        MPI_Recv(
+                a.data(),
+                count,
+                MPI_INT,
+                1,
+                0,
+                MPI_COMM_WORLD,
+                MPI_STATUS_IGNORE
+        );
+
+        cout << "Process " << rank << ": ";
+
+        for (int x : a) {
+            cout << x << " ";
+        }
+
+        cout << endl;
+    }
+
+    MPI_Finalize();
+}
+
+void fifth() {
+    MPI_Init(nullptr, nullptr);
+
+    int rank;
+    int size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    int value = rank * 10;
+
+    if (rank == 0) {
+        cout << "Process 0 value: " << value << endl;
+
+        for (int i = 1; i < size; i++) {
+            int receivedValue;
+
+            MPI_Recv(
+                    &receivedValue,
+                    1,
+                    MPI_INT,
+                    i,
+                    0,
+                    MPI_COMM_WORLD,
+                    MPI_STATUS_IGNORE
+            );
+
+            cout << "Process " << i << " value: " << receivedValue << endl;
+        }
+    } else {
+        MPI_Send(
+                &value,
+                1,
+                MPI_INT,
+                0,
+                0,
+                MPI_COMM_WORLD
+        );
+    }
+
+    MPI_Finalize();
+}
+
+int main() {
+    fifth();
+
+    return 0;
+}
+
+/*
+ mpic++ main.cpp -o main
+ mpirun -np 4 ./main
+ */
